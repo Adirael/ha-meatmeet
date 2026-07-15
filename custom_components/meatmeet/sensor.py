@@ -5,13 +5,19 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -76,9 +82,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Meatmeet sensors from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
+    entities: list[CoordinatorEntity] = [
         MeatmeetSensor(coordinator, description) for description in SENSORS
-    )
+    ]
+    entities.append(MeatmeetRssiSensor(coordinator))
+    async_add_entities(entities)
 
 
 class MeatmeetSensor(CoordinatorEntity[MeatmeetCoordinator], SensorEntity):
@@ -109,3 +117,41 @@ class MeatmeetSensor(CoordinatorEntity[MeatmeetCoordinator], SensorEntity):
     def available(self) -> bool:
         """Return True if the coordinator has data and last update succeeded."""
         return super().available and self.coordinator.data is not None
+
+
+class MeatmeetRssiSensor(CoordinatorEntity[MeatmeetCoordinator], SensorEntity):
+    """Diagnostic: signal strength from the station's last BLE advertisement.
+
+    Advertisement-based, so it may lag while the station stays connected and
+    quiet; treat it as a placement/range indicator rather than a live meter.
+    """
+
+    _attr_has_entity_name = True
+    _attr_name = "Signal strength"
+    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: MeatmeetCoordinator) -> None:
+        """Initialise the RSSI sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.address}_rssi"
+        self._attr_device_info = meatmeet_device_info(coordinator.address)
+
+    def _service_info(self):
+        return async_last_service_info(
+            self.coordinator.hass, self.coordinator.address, connectable=True
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the RSSI of the last advertisement, if any."""
+        info = self._service_info()
+        return info.rssi if info else None
+
+    @property
+    def available(self) -> bool:
+        """Available when an advertisement has been seen for this device."""
+        return self._service_info() is not None

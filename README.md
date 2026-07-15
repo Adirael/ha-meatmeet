@@ -36,8 +36,14 @@ One device (`Meatmeet S Pro`) with:
 - **Station battery** / **Probe battery** (%)
 - **Zone 1–5 target** — settable target temperature (persisted)
 - **Zone 1–5 target reached** — binary sensor, on when the zone hits its target
+- **Connected** — diagnostic binary sensor for the live BLE connection state
+- **Signal strength** — diagnostic RSSI sensor (disabled by default; enable it in
+  the entity settings if you want it)
 
 Poll interval is configurable (1–60 s) via the device's **Configure** button.
+Temperature sensors go *unavailable* (rather than showing stale values) when the
+connection drops. A **Download Diagnostics** button on the device page dumps the
+connection state, last-frame time, RSSI, and current readings (MAC redacted).
 
 ### Example: notify when a cook is done
 

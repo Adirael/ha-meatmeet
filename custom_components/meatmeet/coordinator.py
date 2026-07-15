@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import struct
 from typing import TYPE_CHECKING
 
@@ -21,6 +21,7 @@ from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     LOGGER,
@@ -103,14 +104,22 @@ class MeatmeetCoordinator(DataUpdateCoordinator[MeatmeetData]):
         # entities and read by the "target reached" binary sensors. HA-side only;
         # the station's BLE protocol is read-only.
         self.targets: dict[int, float | None] = {zone: None for zone in range(1, 6)}
+        self.last_frame_time: datetime | None = None
         self._client: BleakClientWithServiceCache | None = None
         self._latest: MeatmeetData | None = None
         self._event = asyncio.Event()
         self._lock = asyncio.Lock()
 
+    @property
+    def is_connected(self) -> bool:
+        """Return True while a live BLE connection to the station is held."""
+        return self._client is not None and self._client.is_connected
+
     @callback
     def _handle_disconnect(self, _client: BleakClientWithServiceCache) -> None:
         LOGGER.debug("Meatmeet %s disconnected", self.address)
+        # Refresh the connectivity sensor promptly rather than next cycle.
+        self.async_update_listeners()
 
     @callback
     def _notification_handler(
@@ -119,6 +128,7 @@ class MeatmeetCoordinator(DataUpdateCoordinator[MeatmeetData]):
         parsed = parse_packet(bytes(data))
         if parsed is not None:
             self._latest = parsed
+            self.last_frame_time = dt_util.utcnow()
             self._event.set()
 
     async def _ensure_connected(self) -> None:

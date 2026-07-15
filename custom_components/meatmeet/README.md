@@ -16,6 +16,11 @@ Exposed as one device (`Meatmeet S Pro`) with these sensors:
 | Probe battery | % | diagnostic |
 | Zone 1–5 target | °C | settable target temperature (`number`), persisted across restarts |
 | Zone 1–5 target reached | on/off | `binary_sensor`, on once the zone reaches its target — use as an automation trigger |
+| Connected | on/off | diagnostic `binary_sensor` — live BLE connection state |
+| Signal strength | dBm | diagnostic RSSI sensor (disabled by default) |
+
+The integration also supports **Download Diagnostics** (device page → ⋮) for a
+JSON snapshot of connection state, last-frame time, RSSI, and readings.
 
 Target temperatures are stored in Home Assistant (the station's BLE protocol is
 read-only), so they drive HA-side alarms/notifications rather than the device's

@@ -6,7 +6,11 @@ an automation trigger to get notified when a cook is done.
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,11 +23,40 @@ async def async_setup_entry(
     entry: MeatmeetConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the per-zone target-reached binary sensors."""
+    """Set up the target-reached and connectivity binary sensors."""
     coordinator = entry.runtime_data
-    async_add_entities(
+    entities: list[CoordinatorEntity] = [
         MeatmeetTargetReached(coordinator, zone) for zone in range(1, 6)
-    )
+    ]
+    entities.append(MeatmeetConnected(coordinator))
+    async_add_entities(entities)
+
+
+class MeatmeetConnected(
+    CoordinatorEntity[MeatmeetCoordinator], BinarySensorEntity
+):
+    """Diagnostic: whether Home Assistant holds a live BLE connection."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Connected"
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: MeatmeetCoordinator) -> None:
+        """Initialise the connectivity sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.address}_connected"
+        self._attr_device_info = meatmeet_device_info(coordinator.address)
+
+    @property
+    def available(self) -> bool:
+        """Always available so it can report the disconnected state itself."""
+        return True
+
+    @property
+    def is_on(self) -> bool:
+        """Return True while connected."""
+        return self.coordinator.is_connected
 
 
 class MeatmeetTargetReached(
