@@ -49,6 +49,7 @@ class MeatmeetData:
     probe_battery: int
     ambient: float | None
     zones: list[float | None]  # Zone 1..5, index 0..4
+    docked: bool  # probe seated on the charging station (byte 27 bit 1)
 
 
 def parse_packet(data: bytes) -> MeatmeetData | None:
@@ -66,6 +67,10 @@ def parse_packet(data: bytes) -> MeatmeetData | None:
         probe_battery=data[15],
         ambient=float(ambient_raw) if 0 < ambient_raw < 250 else None,
         zones=[zone(11), zone(16), zone(18), zone(20), zone(22)],
+        # Byte 27: 0x02 while docked on the station, 0x00 when removed
+        # (confirmed by controlled dock/undock capture). Mask bit 1 to be
+        # robust against a possible charging-state bit.
+        docked=bool(data[27] & 0x02),
     )
 
 

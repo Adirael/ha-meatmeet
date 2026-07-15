@@ -16,6 +16,7 @@ Exposed as one device (`Meatmeet S Pro`) with these sensors:
 | Probe battery | % | diagnostic |
 | Zone 1–5 target | °C | settable target temperature (`number`), persisted across restarts |
 | Zone 1–5 target reached | on/off | `binary_sensor`, on once the zone reaches its target — use as an automation trigger |
+| On station | on/off | `binary_sensor`, on while the probe is docked on the charging station |
 | Connected | on/off | diagnostic `binary_sensor` — live BLE connection state |
 | Signal strength | dBm | diagnostic RSSI sensor (disabled by default) |
 

@@ -29,7 +29,36 @@ async def async_setup_entry(
         MeatmeetTargetReached(coordinator, zone) for zone in range(1, 6)
     ]
     entities.append(MeatmeetConnected(coordinator))
+    entities.append(MeatmeetOnStation(coordinator))
     async_add_entities(entities)
+
+
+class MeatmeetOnStation(
+    CoordinatorEntity[MeatmeetCoordinator], BinarySensorEntity
+):
+    """True while the probe is seated on the charging station."""
+
+    _attr_has_entity_name = True
+    _attr_name = "On station"
+    _attr_icon = "mdi:power-plug"
+
+    def __init__(self, coordinator: MeatmeetCoordinator) -> None:
+        """Initialise the dock sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.address}_on_station"
+        self._attr_device_info = meatmeet_device_info(coordinator.address)
+
+    @property
+    def available(self) -> bool:
+        """Available when the coordinator has a reading."""
+        return super().available and self.coordinator.data is not None
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if the probe is docked on the station."""
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.docked
 
 
 class MeatmeetConnected(

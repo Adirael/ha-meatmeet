@@ -36,6 +36,8 @@ One device (`Meatmeet S Pro`) with:
 - **Station battery** / **Probe battery** (%)
 - **Zone 1–5 target** — settable target temperature (persisted)
 - **Zone 1–5 target reached** — binary sensor, on when the zone hits its target
+- **On station** — binary sensor, on while the probe is docked on the charging
+  station (handy as an automation trigger: removed → cook starting)
 - **Connected** — diagnostic binary sensor for the live BLE connection state
 - **Signal strength** — diagnostic RSSI sensor (disabled by default; enable it in
   the entity settings if you want it)
