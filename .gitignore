@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Local reference copy of the upstream ESPHome package — not ours to redistribute
+/Meatmeet-S-Pro-ESPhome/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
