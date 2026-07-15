@@ -1,0 +1,20 @@
+{
+  "domain": "meatmeet",
+  "name": "Meatmeet",
+  "bluetooth": [
+    {
+      "service_uuid": "a6ed0401-d344-460a-8075-b9e8ec90d71b"
+    },
+    {
+      "local_name": "ME_BOX*"
+    }
+  ],
+  "codeowners": ["@Adirael"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://github.com/Adirael/ha-meatmeet",
+  "issue_tracker": "https://github.com/Adirael/ha-meatmeet/issues",
+  "iot_class": "local_push",
+  "requirements": ["bleak-retry-connector>=3.4.0"],
+  "version": "0.2.0"
+}
