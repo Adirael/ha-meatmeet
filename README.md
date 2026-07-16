@@ -15,6 +15,9 @@ This repo contains:
 
 ## Home Assistant integration
 
+<img width="1175" height="1541" alt="Screenshot 2026-07-16 at 10 31 47" src="https://github.com/user-attachments/assets/05a44d41-8d58-4e4a-9f42-bb2bb0e995b0" />
+
+
 ### Install via HACS (custom repository)
 
 1. HACS → ⋮ → **Custom repositories** → add
